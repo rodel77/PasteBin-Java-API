@@ -11,6 +11,21 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Paste API
+ * 
+ * <br>
+ * <br>
+ * 
+ * Before use the API define your pastebin DevKey there: {@link Paste#setDeveloperKey(String)}
+ * 
+ * <br>
+ * <br>
+ * 
+ * GitHub Repo: https://github.com/rodel77/PasteBin-Java-API
+ * 
+ * @author rodel77
+ */
 public class Paste {
 	private final static String POST_URL = "http://pastebin.com/api/api_post.php";
 	private final static String USER_AGENT = "Mozilla/5.0";
@@ -22,6 +37,15 @@ public class Paste {
 	private Visibility visibility;
 	private Language language;
 	
+	/**
+	 * Create new paste
+	 * 
+	 * @param code Text inside the paste
+	 * @param fileName Paste text
+	 * @param visibility Paste visibility
+	 * @param expire Paste expire time
+	 * @param language Paste language
+	 */
 	public Paste(String code, String fileName, Visibility visibility, Expire expire, Language language) {
 		this.code = code;
 		this.fileName = fileName;
@@ -30,7 +54,14 @@ public class Paste {
 		this.language = language;
 	}
 
-	public String upload() throws IOException{
+	/**
+	 * Upload the paste with all info into pastebin.com
+	 * 
+	 * @return {@link PasteResult}
+	 * @throws IOException
+	 * @see {@link PasteResult}
+	 */
+	public PasteResult upload() throws IOException{
 		String response = "";
 		URL url = new URL(POST_URL);
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -51,9 +82,21 @@ public class Paste {
 			response+=line;
 		}
 		in.close();
-		return response;
+		if(response.contains("pastebin.com")){
+			return new PasteResult("", response, true);
+		}
+		return new PasteResult(response, "", false);
 	}
 	
+	/**
+	 * Get final url parameters
+	 * 
+	 *  <br>
+	 *  
+	 *  POST URL: http://pastebin.com/api/api_post.php?{@link Paste#getURLParameters()}
+	 * 
+	 * @return
+	 */
 	public String getURLParameters(){
 		String param = "api_option=paste"
 			 + "&api_dev_key="+developer_key+""
@@ -69,46 +112,107 @@ public class Paste {
 		return param;
 	}
 	
+	/**
+	 * Set paste format
+	 * 
+	 * @return
+	 */
 	public Language getLanguage(){
 		return language;
 	}
 	
+	/**
+	 * Set paste format
+	 * 
+	 * @param language
+	 */
 	public void setLanguage(Language language){
 		this.language = language;
 	}
 	
+	/**
+	 * Set visibility
+	 * 
+	 * @return
+	 */
 	public Visibility getVisibility(){
 		return visibility;
 	}
 	
+	/**
+	 * Set visibility
+	 * 
+	 * @param visibility
+	 */
 	public void setVisibility(Visibility visibility){
 		this.visibility = visibility;
 	}
 	
+	/**
+	 * Get expire time
+	 * 
+	 * @return
+	 */
 	public Expire getExpire(){
 		return expire;
 	}
 	
+	
+	/**
+	 * Set expire time
+	 * 
+	 * @param expire
+	 */
 	public void setExpire(Expire expire){
 		this.expire = expire;
 	}
 	
+	/**
+	 * Get the paste name
+	 * 
+	 * @return
+	 */
 	public String getFileName(){
 		return fileName;
 	}
 	
+	/**
+	 * Set the paste name
+	 * 
+	 * @param fileName
+	 */
 	public void setFileName(String fileName){
 		this.fileName = fileName;
 	}
 	
+	/**
+	 * Get the paste
+	 * 
+	 * @return
+	 */
 	public String getCode(){
 		return code;
 	}
 	
+	/**
+	 * Set the text in your paste
+	 * 
+	 * <br>
+	 * 
+	 * Use: \n for line break
+	 * 
+	 * @param code
+	 */
 	public void setCode(String code){
 		this.code = code;
 	}
 	
+	/**
+	 * Set the text in your paste
+	 * 
+	 * @param code File to paste
+	 * @throws IOException
+	 */
 	public void setCode(File code) throws IOException{
 		BufferedReader reader = new BufferedReader(new FileReader(code));
 		String ln;
@@ -118,10 +222,19 @@ public class Paste {
 		reader.close();
 	}
 	
+	/**
+	 * Set your static developer key
+	 * 
+	 * @param developerKey Developer key generated there: http://pastebin.com/api (You have to login and then copy the text on "Your Unique Developer API Key")
+	 */
 	public static void setDeveloperKey(String developerKey){
 		developer_key = developerKey;
 	}
 	
+	/**
+	 * Paste Language 
+	 * @author rodel77
+	 */
 	public enum Language{
 		CS("4cs"),
 		ACME("6502acme"),
@@ -388,6 +501,11 @@ public class Paste {
 		}
 	}
 	
+	/**
+	 * Paste Visibility
+	 * 
+	 * @author rodel77
+	 */
 	public enum Visibility{
 		PUBLIC(0),
 		UNLISTED(1),
@@ -404,6 +522,11 @@ public class Paste {
 		}
 	}
 	
+	/**
+	 * Paste expire
+	 * 
+	 * @author rodel77
+	 */
 	public enum Expire{
 		NEVER("N"),
 		TEN_MINUTES("10M"),
@@ -421,6 +544,73 @@ public class Paste {
 		
 		public String getAPIName(){
 			return apiName;
+		}
+	}
+
+	/**
+	 * Paste Result
+	 * 
+	 * @author rodel77
+	 */
+	public class PasteResult{
+		private String errorMessage = "";
+		private String pasteURL = "";
+		private boolean valid = false;
+		
+		/**
+		 * Create PasteResult (Only for internal API)
+		 * 
+		 * @param errorMessage
+		 * @param pasteURL
+		 * @param valid
+		 */
+		public PasteResult(String errorMessage, String pasteURL, boolean valid) {
+			this.errorMessage = errorMessage;
+			this.pasteURL = pasteURL;
+			this.valid = valid;
+		}
+		
+		/**
+		 * Get error message
+		 * <br>
+		 * <b>Note: First check {@link PasteResult#isValid()}</b>
+		 * @return
+		 */
+		public String getErrorMessage() {
+			return errorMessage;
+		}
+		
+		/**
+		 * Get paste URL
+		 * <br>
+		 * <b>Note: First check {@link PasteResult#isValid()}</b>
+		 * @return
+		 */
+		public String getPasteURL(){
+			return pasteURL;
+		}
+		
+		/**
+		 * Check if valid
+		 * 
+		 * @return
+		 */
+		public boolean isValid() {
+			return valid;
+		}
+		
+		/**
+		 * If valid return paste url otherwise error message
+		 * 
+		 * @return
+		 */
+		@Override
+		public String toString() {
+			if(valid) {
+				return pasteURL;
+			}else{
+				return errorMessage;
+			}
 		}
 	}
 	
