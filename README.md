@@ -9,7 +9,7 @@ Now go to http://pastebin.com and create an account, then go http://pastebin.com
 ![alt tag](http://image.prntscr.com/image/ae9d74414b6e4d12bab0e9761d833998.png)
 
 Then in your start class add this
-Paste.setDeveloperKey("Your Developer Key Here");
+`Paste.setDeveloperKey("Your Developer Key Here");`
 
 And now when you need to create a pastebin only need to do this
-new Paste("Code here!", "File Name", Visibility.PUBLIC, Expire.ONE_HOUR, Language.JAVA).upload();
+`new Paste("Code here!", "File Name", Visibility.PUBLIC, Expire.ONE_HOUR, Language.JAVA).upload();`
