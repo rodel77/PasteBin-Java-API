@@ -1,11 +1,128 @@
 package mx.com.rodel.pastebin;
 
-public class PasteBinAPI {
-	public static void main(String[] args) {
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Paste {
+	private final static String POST_URL = "http://pastebin.com/api/api_post.php";
+	private final static String USER_AGENT = "Mozilla/5.0";
+	private static String developer_key = "Set your key there!";
+	
+	private String code = "";
+	private String fileName = "";
+	private Expire expire;
+	private Visibility visibility;
+	private Language language;
+	
+	public Paste(String code, String fileName, Visibility visibility, Expire expire, Language language) {
+		this.code = code;
+		this.fileName = fileName;
+		this.visibility = visibility;
+		this.expire = expire;
+		this.language = language;
+	}
+
+	public String upload() throws IOException{
+		String response = "";
+		URL url = new URL(POST_URL);
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 		
+		conn.setRequestMethod("POST");
+		conn.setRequestProperty("User-Agent", USER_AGENT);
+		conn.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
+		
+		conn.setDoOutput(true);
+		DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+		wr.writeBytes(getURLParameters());
+		wr.flush();
+		wr.close();
+		
+		BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+		String line;
+		while((line = in.readLine()) != null){
+			response+=line;
+		}
+		in.close();
+		return response;
 	}
 	
-	public enum Languages{
+	public String getURLParameters(){
+		String param = "api_option=paste"
+			 + "&api_dev_key="+developer_key+""
+			 + "&api_paste_private="+visibility.id+""
+			 + "&api_paste_name="+fileName+""
+			 + "&api_paste_format="+language.apiName+""
+			 + "&api_paste_code="+code;
+		
+		if(expire!=Expire.NEVER){
+			param+="&api_expire_date="+expire.apiName;
+		}
+		
+		return param;
+	}
+	
+	public Language getLanguage(){
+		return language;
+	}
+	
+	public void setLanguage(Language language){
+		this.language = language;
+	}
+	
+	public Visibility getVisibility(){
+		return visibility;
+	}
+	
+	public void setVisibility(Visibility visibility){
+		this.visibility = visibility;
+	}
+	
+	public Expire getExpire(){
+		return expire;
+	}
+	
+	public void setExpire(Expire expire){
+		this.expire = expire;
+	}
+	
+	public String getFileName(){
+		return fileName;
+	}
+	
+	public void setFileName(String fileName){
+		this.fileName = fileName;
+	}
+	
+	public String getCode(){
+		return code;
+	}
+	
+	public void setCode(String code){
+		this.code = code;
+	}
+	
+	public void setCode(File code) throws IOException{
+		BufferedReader reader = new BufferedReader(new FileReader(code));
+		String ln;
+		while((ln = reader.readLine()) != null){
+			this.code+=ln+"\n";
+		}
+		reader.close();
+	}
+	
+	public static void setDeveloperKey(String developerKey){
+		developer_key = developerKey;
+	}
+	
+	public enum Language{
 		CS("4cs"),
 		ACME("6502acme"),
 		KICKASS("6502kickass"),
@@ -262,12 +379,59 @@ public class PasteBinAPI {
 
 		private String apiName;
 		
-		private Languages(String apiName) {
+		private Language(String apiName) {
 			this.apiName = apiName;
 		}
 		
 		public String getAPIName(){
 			return apiName;
 		}
+	}
+	
+	public enum Visibility{
+		PUBLIC(0),
+		UNLISTED(1),
+		PRIVATE(2);
+		
+		private int id;
+		
+		private Visibility(int id) {
+			this.id = id;
+		}
+		
+		public int getID(){
+			return id;
+		}
+	}
+	
+	public enum Expire{
+		NEVER("N"),
+		TEN_MINUTES("10M"),
+		ONE_HOUR("1H"),
+		ONE_DAY("1D"),
+		ONE_WEEK("1W"),
+		TWO_WEEKS("2W"),
+		ONE_MONTH("1M");
+		
+		private String apiName;
+		
+		private Expire(String apiName) {
+			this.apiName = apiName;
+		}
+		
+		public String getAPIName(){
+			return apiName;
+		}
+	}
+	
+	@Override
+	public String toString() {
+		Map<String, String> vals = new HashMap<>();
+		vals.put("code", code);
+		vals.put("name", fileName);
+		vals.put("expire", expire.name());
+		vals.put("visibility", visibility.name());
+		vals.put("language", language.name());
+		return "Pastebin"+vals.toString();
 	}
 }
